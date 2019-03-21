@@ -29,7 +29,7 @@ int main()
     
     // do something such as setting data.
   
-    Curve curve;
+    bf::Curve curve;
     curve.fitCurve(points, 4.0);
 
     for(auto b: curve.beziers)
