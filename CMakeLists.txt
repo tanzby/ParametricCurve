@@ -1,13 +1,17 @@
-cmake_minimum_required(VERSION 3.5.0)
-project(Curve)
+cmake_minimum_required(VERSION 3.10)
+project(ParametricCurve)
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 
-find_package(PCL REQUIRED)
-include_directories(${PCL_INCLUDE_DIRS})
+find_package(Eigen3 REQUIRED)
+include_directories(${EIGEN3_INCLUDE_DIR})
 
-find_package(OpenCV REQUIRED)
-include_directories(${OpenCV_INCLUDE_DIRS})
+include_directories(include)
 
-add_executable(example example.cpp)
-target_link_libraries(example ${OpenCV_LIBS})
+option(build_example "build example" ON)
+message(STATUS "build example: " ${build_example})
+
+if (build_example)
+    message(STATUS "configuring example ...")
+    add_subdirectory(example)
+endif ()
