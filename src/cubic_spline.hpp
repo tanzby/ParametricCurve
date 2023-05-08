@@ -18,32 +18,14 @@ private:
 
 public:
   CubicInterpolation() {
-    for (int i = 0; i < 4; ++i)
-      coeffs_[i].setZero();
+    for (auto & coeff : coeffs_) { {
+      coeff.setZero();
+}
+}
   }
 
-  PointType at(const double &t,
-               const int &derivative_order = 0) const override {
-    switch (derivative_order) {
-    case 0: {
-      PointType point(0.0, 0.0);
-      double tpow = 1.0;
-      for (int i = 0; i < 4; ++i) {
-        point += coeffs_[i] * tpow;
-        tpow *= t;
-      }
-      return point;
-    }
-    case 1:
-      return coeffs_[1] + 2.0 * coeffs_[2] * t + 3.0 * coeffs_[3] * t * t;
-    case 2:
-      return 2.0 * coeffs_[2] + 6.0 * coeffs_[3] * t;
-    case 3:
-      return 6.0 * coeffs_[3];
-    default:
-      return PointType::Zero();
-    }
-  }
+  [[nodiscard]] auto at(const double &t,
+               const int &derivative_order = 0) const -> PointType override;
 
   /**
    * @brief 使用两个点，及起点与终点的方向，进行三次样条插值
@@ -53,32 +35,9 @@ public:
    * @param theta2 终点方向，值域为 $[0, 2 \pi]$
    */
   void interpolation(const PointType &p1, double theta1, const PointType &p2,
-                     double theta2) {
-    auto dp = p2 - p1;
+                     double theta2);
 
-    double k = dp.norm();
-
-    double kc1 = k * cos(theta1);
-    double ks1 = k * sin(theta1);
-    double kc2 = k * cos(theta2);
-    double ks2 = k * sin(theta2);
-
-    coeffs_[0] = p1;
-    coeffs_[1] << kc1, ks1;
-    coeffs_[2] << 3.0 * dp(0) - 2.0 * kc1 - kc2, 3.0 * dp(1) - 2.0 * ks1 - ks2;
-
-    coeffs_[3] << -2.0 * dp(0) + kc1 + kc2, -2.0 * dp(1) + ks1 + ks2;
-
-    computeLength();
-  }
-
-  void print(std::ostream &out, const std::string &s = "") const override {
-    out << s;
-    for (const auto &c : coeffs_) {
-      out << c;
-    }
-    out << '\n';
-  }
+  void print(std::ostream &out, const std::string &s ) const override;
 };
 
 /**
@@ -99,12 +58,12 @@ protected:
   bool force_linear_extrapolation_;
 
   struct _Spline {
-    mutable const vector<double> *t_ptr;
+    mutable const vector<double> *t_ptr{};
     Eigen::VectorXd y;
     Eigen::VectorXd a, b, c;
-    double b0, c0;
+    double b0{}, c0{};
 
-    _Spline(){};
+    _Spline()= default;;
 
     void interp(PieceWiseCubicSpline<> &host, const vector<double> &t,
                 const Eigen::VectorXd &y) {
@@ -181,7 +140,7 @@ protected:
       }
 
       // for left extrapolation coefficients
-      b0 = (host.force_linear_extrapolation_ == false) ? b[0] : 0.0;
+      b0 = (!host.force_linear_extrapolation_) ? b[0] : 0.0;
       c0 = c[0];
 
       // for the right extrapolation coefficients
@@ -191,12 +150,14 @@ protected:
       a[N - 1] = 0.0;
       c[N - 1] = 3.0 * a[N - 2] * h * h + 2.0 * b[N - 2] * h +
                  c[N - 2]; // = f'_{n-2}(x_{n-1})
-      if (host.force_linear_extrapolation_)
+      if (host.force_linear_extrapolation_) { {
         b[N - 1] = 0.0;
+}
+}
     }
 
-    double at(const int &idx, const double &t,
-              const int derivative_order = 0) const {
+    auto at(const int &idx, const double &t,
+              const int derivative_order = 0) const -> double {
       const vector<double> &t_ = *t_ptr;
       size_t n = t_.size();
 
@@ -309,7 +270,7 @@ public:
     const unsigned N = points.size();
 
     t_ = t;
-    // TODO: maybe sort x and y, rather than returning an error
+    // TODO(codespace): maybe sort x and y, rather than returning an error
     for (int i = 0; i < N - 1; i++) {
       assert(t_[i] < t_[i + 1]);
     }
@@ -330,8 +291,8 @@ public:
    * @param derivative_order 给定的阶次
    * @return 返回三次样条插值点，类型为PieceWiseCubicSpline::PointType
    */
-  PointType at(const double &t,
-               const int &derivative_order = 0) const override {
+  auto at(const double &t,
+               const int &derivative_order = 0) const -> PointType override {
     auto begin = t_.data();
     auto it = std::lower_bound(begin, begin + t_.size(), t);
     int idx = std::max(int(it - begin) - 1, 0);

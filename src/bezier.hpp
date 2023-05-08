@@ -10,11 +10,11 @@ using namespace std;
 
 template <int N = 3, int PointDim = 2>
 class Bezier : public Curve<N, PointDim> {
-public:
+ public:
   using PointType = typename Curve<N, PointDim>::PointType;
   using PointsType = typename Curve<N, PointDim>::PointsType;
 
-private:
+ private:
   PointsType derivative_precal_points_[N + 1];
   int derivative_precal_prefix_[N + 1];
 
@@ -28,12 +28,10 @@ private:
       int I_range = N - k;
       for (int i = 0; i <= I_range; ++i) {
         derivative_precal_points_[k].col(i) =
-            derivative_precal_points_[k - 1].col(i + 1) -
-            derivative_precal_points_[k - 1].col(i);
+            derivative_precal_points_[k - 1].col(i + 1) - derivative_precal_points_[k - 1].col(i);
       }
 
-      derivative_precal_prefix_[k] =
-          derivative_precal_prefix_[k - 1] * (N - k + 1);
+      derivative_precal_prefix_[k] = derivative_precal_prefix_[k - 1] * (N - k + 1);
     }
   }
 
@@ -45,45 +43,45 @@ private:
     Curve<N, PointDim>::computeLength();
   }
 
-public:
+ public:
   Bezier() { derivative_precal_points_[0] = PointsType::Zero(); }
 
-  Bezier(const std::initializer_list<PointType> &list) {
-    set(std::forward<decltype(list)>(list));
-  }
+  Bezier(const std::initializer_list<PointType>& list) { set(std::forward<decltype(list)>(list)); }
 
   template <typename T = array<double, PointDim>>
-  Bezier(const std::initializer_list<T> &list) {
+  Bezier(const std::initializer_list<T>& list) {
     set(std::forward<decltype(list)>(list));
   }
 
-  void set(const std::initializer_list<PointType> &list) {
+  void set(const std::initializer_list<PointType>& list) {
     int i = 0;
-    for (const auto &it : list) {
+    for (const auto& it : list) {
       derivative_precal_points_[0].col(i) = it;
-      if (++i > N)
+      if (++i > N) {
         break;
+      }
     }
     computeLength();
   }
 
   template <typename T = array<double, PointDim>>
-  void set(const std::initializer_list<PointType> &list) {
+  void set(const std::initializer_list<PointType>& list) {
     int i = 0;
-    for (const auto &it : list) {
+    for (const auto& it : list) {
       derivative_precal_points_[0].col(i) = it;
-      if (++i > N)
+      if (++i > N) {
         break;
+      }
     }
     computeLength();
   }
 
-  PointType at(const double &t,
-               const int &derivative_order = 0) const override {
+  auto at(const double& t, const int& derivative_order = 0) const -> PointType override {
     double t_ = std::clamp(t, 0.0, 1.0);
 
-    if (derivative_order > N)
+    if (derivative_order > N) {
       return PointType::Zero();
+    }
 
     /// De Casteljau’s Algorithm ///
     PointsType temp = derivative_precal_points_[derivative_order];
@@ -91,58 +89,62 @@ public:
     int I_range = N - derivative_order;
     for (int i = 0; i < I_range; ++i) {
       int J_range = I_range - i;
-      for (int j = 0; j < J_range; ++j)
-        temp.col(j) = (1.0 - t_) * temp.col(j) + t_ * temp.col(j + 1);
+      for (int j = 0; j < J_range; ++j) {
+        {
+          temp.col(j) = (1.0 - t_) * temp.col(j) + t_ * temp.col(j + 1);
+        }
+      }
     }
     return derivative_precal_prefix_[derivative_order] * temp.col(0);
   }
 
-  PointType param(const int &i) const {
+  auto param(const int& i) const -> PointType {
     if (i > N) {
-      throw out_of_range(
-          "Bezier::coeff: Current curve is in N=" + std::to_string(N) +
-          " order, but the given i is more than N+1=" + std::to_string(N));
+      throw out_of_range("Bezier::coeff: Current curve is in N=" + std::to_string(N) +
+                         " order, but the given i is more than N+1=" + std::to_string(N));
     }
     return derivative_precal_points_[0].col(i);
   }
 
-  void print(std::ostream &out, const string &s = "") const override {
+  void print(std::ostream& out, const string& s = "") const override {
     out << s << derivative_precal_points_[0] << '\n';
   }
 };
 
 template <int PointDim = 2>
 class PiecewiseBezierCurve : public Curve<3, PointDim> {
-public:
+ public:
   using BezierType = Bezier<3, PointDim>;
   using PointType = typename Curve<3, PointDim>::PointType;
 
-private:
+ private:
   vector<BezierType> beziers_;
   vector<double> length_table_;
 
-  mutable const vector<PointType> *fitting_points_;
+  mutable const vector<PointType>* fitting_points_;
 
-  std::vector<double> reParameterize(const int &begin, const int &end,
-                                     const std::vector<double> &parameter,
-                                     BezierType &bezier) {
-    std::vector<double> uPrime(end - begin + 1); //  New parameter values
+  auto reParameterize(const int& begin,
+                      const int& end,
+                      const std::vector<double>& parameter,
+                      BezierType& bezier) -> std::vector<double> {
+    std::vector<double> uPrime(end - begin + 1);  //  New parameter values
 
     for (int i = begin; i <= end; i++) {
-      uPrime[i - begin] = bezier.findClosestParameter(fitting_points_->at(i),
-                                                      parameter[i - begin], 1);
+      uPrime[i - begin] =
+          bezier.findClosestParameter(fitting_points_->at(i), parameter[i - begin], 1);
     }
     return uPrime;
   }
 
-  BezierType generateBezier(const int &begin, const int &end,
-                            std::vector<double> &parameters,
-                            const PointType &left_tangent,
-                            const PointType &right_tangent) {
+  auto generateBezier(const int& begin,
+                      const int& end,
+                      std::vector<double>& parameters,
+                      const PointType& left_tangent,
+                      const PointType& right_tangent) -> BezierType {
     std::vector<std::array<PointType, 2>> A(parameters.size());
 
     for (int i = 0; i < parameters.size(); ++i) {
-      auto &u = parameters[i];
+      auto& u = parameters[i];
       A[i][0] = left_tangent * 3.0 * (1.0 - u) * (1.0 - u) * u;
       A[i][1] = right_tangent * 3.0 * (1.0 - u) * u * u;
     }
@@ -158,8 +160,10 @@ private:
       C[1][0] = C[0][1];
       C[1][1] += A[i][1].dot(A[i][1]);
 
-      BezierType b{fitting_points_->at(begin), fitting_points_->at(begin),
-                   fitting_points_->at(end), fitting_points_->at(end)};
+      BezierType b{fitting_points_->at(begin),
+                   fitting_points_->at(begin),
+                   fitting_points_->at(end),
+                   fitting_points_->at(end)};
 
       tmp = fitting_points_->at(i + begin) - b.at(parameters[i]);
 
@@ -179,8 +183,7 @@ private:
     // http://newsgroups.derkeiler.com/Archive/Comp/comp.graphics.algorithms/2005-08/msg00419.html
     // This is a common problem with this algorithm.
 
-    double segLength =
-        (fitting_points_->at(begin) - fitting_points_->at(end)).norm();
+    double segLength = (fitting_points_->at(begin) - fitting_points_->at(end)).norm();
 
     bool danger = false;
     if ((alpha_l > segLength * 2) || (alpha_r > segLength * 2)) {
@@ -191,7 +194,8 @@ private:
     //  If alpha negative, use the Wu/Barsky heuristic (see text)
     //  (if alpha is 0, you get coincident control points that lead to
     //  divide by zero in any subsequent NewtonRaphsonRootFind() call.
-    PointType c1, c2;
+    PointType c1;
+    PointType c2;
     double epsilon = Curve<>::EPS * segLength;
     if (alpha_l < epsilon || alpha_r < epsilon || danger) {
       // fall back on standard (probably inaccurate) formula, and subdivide
@@ -206,16 +210,16 @@ private:
     return {fitting_points_->at(begin), c1, c2, fitting_points_->at(end)};
   }
 
-  std::pair<double, int>
-  computeMaxError(const int &begin, const int &end, BezierType &bezier,
-                  const std::vector<double> &parameters) {
+  auto computeMaxError(const int& begin,
+                       const int& end,
+                       BezierType& bezier,
+                       const std::vector<double>& parameters) -> std::pair<double, int> {
     double max_dist = 0.0;
     int split_point = (end - begin + 1) / 2;
 
     for (int i = begin + 1; i < end; ++i) {
       // increase error weight.
-      double dist = (bezier.at(parameters[i - begin]) - fitting_points_->at(i))
-                        .squaredNorm();
+      double dist = (bezier.at(parameters[i - begin]) - fitting_points_->at(i)).squaredNorm();
       if (dist > max_dist) {
         max_dist = dist;
         split_point = i;
@@ -224,12 +228,14 @@ private:
     return {max_dist, split_point};
   }
 
-  void fitCubic(const int &begin, const int &end, const PointType &left_tangent,
-                const PointType &right_tangent, double max_error) {
+  void fitCubic(const int& begin,
+                const int& end,
+                const PointType& left_tangent,
+                const PointType& right_tangent,
+                double max_error) {
     // Use heuristic if region only has two points in it
     if (end - begin + 1 == 2) {
-      double dist =
-          (fitting_points_->at(begin) - fitting_points_->at(end)).norm() / 3.0;
+      double dist = (fitting_points_->at(begin) - fitting_points_->at(end)).norm() / 3.0;
       BezierType temp_bezier{fitting_points_->at(begin),
                              fitting_points_->at(begin) + left_tangent * dist,
                              fitting_points_->at(end) + right_tangent * dist,
@@ -255,8 +261,7 @@ private:
     if (error < max_error * max_error) {
       for (int i = 0; i < max_iteration; ++i) {
         auto uPrime = reParameterize(begin, end, u, bez);
-        auto _bez =
-            generateBezier(begin, end, uPrime, left_tangent, right_tangent);
+        auto _bez = generateBezier(begin, end, uPrime, left_tangent, right_tangent);
         auto _res = computeMaxError(begin, end, bez, u);
         double _error = res.first;
         int _split_idx = res.second;
@@ -268,21 +273,19 @@ private:
       }
     }
 
-    PointType center_tangent = (fitting_points_->at(split_idx - 1) -
-                                fitting_points_->at(split_idx + 1))
-                                   .normalized();
+    PointType center_tangent =
+        (fitting_points_->at(split_idx - 1) - fitting_points_->at(split_idx + 1)).normalized();
     fitCubic(begin, split_idx, left_tangent, center_tangent, max_error);
     fitCubic(split_idx, end, -center_tangent, right_tangent, max_error);
   }
 
-  std::vector<double> chordLengthParameterize(int begin, int end) {
+  auto chordLengthParameterize(int begin, int end) -> std::vector<double> {
     std::vector<double> u(end - begin + 1);
     u[0] = 0.0;
 
     for (int i = begin + 1; i <= end; ++i) {
       u[i - begin] =
-          u[i - begin - 1] +
-          (fitting_points_->at(i) - fitting_points_->at(i - 1)).norm();
+          u[i - begin - 1] + (fitting_points_->at(i) - fitting_points_->at(i - 1)).norm();
     }
 
     for (int i = begin + 1; i <= end; ++i) {
@@ -291,12 +294,13 @@ private:
     return u;
   }
 
-protected:
+ protected:
   void computeLength() override {
-    if (beziers_.empty())
+    if (beziers_.empty()) {
       return;
+    }
 
-    for (BezierType &b : beziers_) {
+    for (BezierType& b : beziers_) {
       this->length_ += b.length();
     }
 
@@ -312,17 +316,18 @@ protected:
     }
   }
 
-public:
-  PointType at(const double &t,
-               const int &derivative_order = 0) const override {
-    if (beziers_.empty())
+ public:
+  auto at(const double& t, const int& derivative_order = 0) const -> PointType override {
+    if (beziers_.empty()) {
       return {};
-    if (t > 1.0)
+    }
+    if (t > 1.0) {
       return {};
+    };
 
     auto bidx = std::upper_bound(length_table_.begin(), length_table_.end(), t);
 
-    assert(bidx != length_table_.end()); // 理应任何时候不会等于end
+    assert(bidx != length_table_.end());  // 理应任何时候不会等于end
 
     double t_s = bidx == length_table_.begin() ? 0 : *(bidx - 1);
     double t_b = (t - t_s) / (*bidx - t_s);
@@ -330,9 +335,9 @@ public:
     return beziers_.at(bidx - length_table_.begin()).at(t_b, derivative_order);
   }
 
-  void print(std::ostream &out, const string &s = "") const override {
+  void print(std::ostream& out, const string& s = "") const override {
     out << s;
-    for (const auto &b : beziers_) {
+    for (const auto& b : beziers_) {
       b.print(out);
     }
   }
@@ -352,17 +357,16 @@ public:
    * @param max_error 限定最大误差
    * @return
    */
-  const std::vector<BezierType> &fit(const std::vector<PointType> &points,
-                                     const double &max_error = 10.0) {
+  auto fit(const std::vector<PointType>& points, const double& max_error = 10.0)
+      -> const std::vector<BezierType>& {
     beziers_.clear();
 
     if (points.size() > 1) {
       fitting_points_ = &points;
-      auto left_tangent =
-          (fitting_points_->at(1) - fitting_points_->at(0)).normalized();
-      auto right_tangent = (fitting_points_->at(points.size() - 2) -
-                            fitting_points_->at(points.size() - 1))
-                               .normalized();
+      auto left_tangent = (fitting_points_->at(1) - fitting_points_->at(0)).normalized();
+      auto right_tangent =
+          (fitting_points_->at(points.size() - 2) - fitting_points_->at(points.size() - 1))
+              .normalized();
 
       fitCubic(0, points.size() - 1, left_tangent, right_tangent, max_error);
     }
@@ -370,7 +374,5 @@ public:
     return beziers_;
   }
 
-  const std::vector<BezierType> &getPiecewiseBeziers() const {
-    return beziers_;
-  }
+  auto getPiecewiseBeziers() const -> const std::vector<BezierType>& { return beziers_; }
 };

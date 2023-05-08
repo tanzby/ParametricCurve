@@ -1,0 +1,16 @@
+---
+Checks: >
+    bugprone-*,
+    clang-analyzer-*,-clang-analyzer-optin.performance.Padding,
+    cppcoreguidelines-*,-cppcoreguidelines-pro-bounds-constant-array-index,-cppcoreguidelines-pro-type-reinterpret-cast,-cppcoreguidelines-avoid-magic-numbers,
+    google-*,
+    llvm-*,-llvm-header-guard,
+    misc-*,-misc-unused-parameters,
+    modernize-*,-modernize-raw-string-literal,-modernize-use-auto,-modernize-use-trailing-return-type,
+    performance-*,
+    readability-*,-readability-else-after-return,-readability-redundant-declaration,-readability-named-parameter,-readability-magic-numbers,
+
+WarningsAsErrors: ''
+HeaderFilterRegex: '^(include)/'
+AnalyzeTemporaryDtors: false
+...

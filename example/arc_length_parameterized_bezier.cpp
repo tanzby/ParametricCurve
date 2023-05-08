@@ -1,6 +1,8 @@
-#include "bezier.hpp"
-#include "opencv2/opencv.hpp"
 #include <iostream>
+
+#include "opencv2/opencv.hpp"
+
+#include "bezier.hpp"
 
 using namespace cv;
 using namespace std;
@@ -29,14 +31,18 @@ int main() {
     auto ps4 = bezier.atWithArcLengthParameterized(t, 0, 4);
     circle(img, {int(ps4[0]), int(ps4[1])}, 4, {0, 255, 0}, -1);
     if (prev_point != Eigen::Vector2d::Zero()) {
-      line(img, {int(prev_point[0]), int(prev_point[1])},
-           {int(ps4[0]), int(ps4[1])}, {255, 255, 255}, 1, LINE_AA);
+      line(img,
+           {int(prev_point[0]), int(prev_point[1])},
+           {int(ps4[0]), int(ps4[1])},
+           {255, 255, 255},
+           1,
+           LINE_AA);
     }
     prev_point = ps4;
     t += step;
   }
 
-  for (auto &p : bezier.sampleWithArcLengthParameterized(step, false, 4)) {
+  for (auto& p : bezier.sampleWithArcLengthParameterized(step, false, 4)) {
     circle(img, {int(p[0]), int(p[1])}, 2, {255, 0, 0}, -1);
   }
 

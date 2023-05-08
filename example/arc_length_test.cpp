@@ -1,6 +1,6 @@
-#include "bezier.hpp"
 #include <iomanip>
 #include <iostream>
+#include "bezier.hpp"
 
 using namespace std;
 
@@ -17,7 +17,9 @@ int main() {
   cout << setprecision(16);
 
   // naive method 1
-  double t = 0, step = 0.5, length = 0;
+  double t = 0;
+  double step = 0.5;
+  double length = 0;
   auto prev = bezier.at(0);
   while (t <= 1) {
     auto p = bezier.at(t);
