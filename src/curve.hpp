@@ -56,8 +56,8 @@ class Curve {
    * @return $t$参数位置，$N$阶导数的值
    */
   virtual auto findClosestParameter(const PointType& point,
-                                      double init_param,
-                                      const int& max_iter = 20) const -> double {
+                                    double init_param,
+                                    const int& max_iter = 20) const -> double {
     /**
      * 找到参数u使得离点p是最近的，即求解
      * f = (C(u)-p)*C'(u) = 0
@@ -95,11 +95,11 @@ class Curve {
    * @param max_iter_time 最大迭代次数
    * @return 参数化采样点数据
    */
-  virtual auto sampleWithArcLengthParameterized(
-      const double& delta,
-      bool arc_length_base = true,
-      const int& max_iter_time = 4,
-      vector<double>* arc_length_t = nullptr) -> vector<PointType> {
+  virtual auto sampleWithArcLengthParameterized(const double& delta,
+                                                bool arc_length_base = true,
+                                                const int& max_iter_time = 4,
+                                                vector<double>* arc_length_t = nullptr)
+      -> vector<PointType> {
     const double avg_distance = arc_length_base ? delta : this->length_ * delta;
 
     const double avg_t = arc_length_base ? avg_distance / this->length_ : delta;
@@ -125,8 +125,9 @@ class Curve {
 
     for (int iter = 0; iter < max_iter_time; ++iter) {
       // 1. 计算上一次迭代确定的 t 参数下，每一个分段的近似长度
-      for (int j = 1; j < n; j++) { dists[j] = (ret[j] - ret[j - 1]).norm();
-}
+      for (int j = 1; j < n; j++) {
+        dists[j] = (ret[j] - ret[j - 1]).norm();
+      }
 
       double offset = 0;
       for (int j = 1; j < n; j++) {
@@ -166,9 +167,9 @@ class Curve {
    * @return 参数化点位置
    */
   virtual auto atWithArcLengthParameterized(const double& t,
-                                                 const int& derivative_order = 0,
-                                                 const int& max_iter_time = 4,
-                                                 double* arc_length_t = nullptr) const -> PointType {
+                                            const int& derivative_order = 0,
+                                            const int& max_iter_time = 4,
+                                            double* arc_length_t = nullptr) const -> PointType {
     assert(t >= 0.0 && t <= 1.0);
 
     double approx_t = t;
@@ -180,8 +181,9 @@ class Curve {
     for (int iter = 0; iter < max_iter_time; ++iter) {
       double approx_length = NumericalQuadrature::adaptive_simpson_3_8(df, 0, approx_t);
       double d = approx_length - target_length;
-      if (abs(d) < EPS) { break;
-}
+      if (abs(d) < EPS) {
+        break;
+      }
 
       // Newton's method
       double first_order = this->at(approx_t, 1).norm();
@@ -191,12 +193,13 @@ class Curve {
 
       approx_t = approx_t - numerator / denominator;
 
-      if (abs(approx_t - prev_approx_t) < EPS) { {
-        break;
-      } } else { {
-        prev_approx_t = approx_t;
-}
-}
+      if (abs(approx_t - prev_approx_t) < EPS) {
+        {
+          break;
+        }
+      } else {
+        { prev_approx_t = approx_t; }
+      }
     }
     if (arc_length_t != nullptr) {
       *arc_length_t = approx_t;

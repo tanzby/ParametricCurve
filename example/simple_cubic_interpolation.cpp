@@ -1,6 +1,6 @@
-#include "cubic_spline.hpp"
 #include <iostream>
 #include <opencv2/opencv.hpp>
+#include "cubic_spline.hpp"
 
 using namespace cv;
 using namespace std;

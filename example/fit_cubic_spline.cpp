@@ -1,6 +1,6 @@
-#include "cubic_spline.hpp"
 #include <iostream>
 #include <opencv2/opencv.hpp>
+#include "cubic_spline.hpp"
 
 using namespace std;
 using namespace cv;
@@ -12,8 +12,7 @@ int main() {
   //    };
 
   vector<double> param{60, 90, 170, 230, 250};
-  vector<Eigen::Vector2d> points{
-      {60, 80}, {90, 100}, {170, 180}, {230, 240}, {250, 240}};
+  vector<Eigen::Vector2d> points{{60, 80}, {90, 100}, {170, 180}, {230, 240}, {250, 240}};
 
   PieceWiseCubicSpline s;
   s.interpolation(param, points);
@@ -32,8 +31,7 @@ int main() {
   polylines(img, vec, false, {0, 0, 255}, 1, LINE_AA);
 
   // draw fitted point
-  for (auto p : points)
-    circle(img, {int(p[0]), int(p[1])}, 4, {255, 255, 255}, -1);
+  for (auto p : points) circle(img, {int(p[0]), int(p[1])}, 4, {255, 255, 255}, -1);
 
   // draw derivative
   t = 0, step = 50, end = width;
@@ -42,8 +40,7 @@ int main() {
     Eigen::Vector2d dir = s.at(t, 1) * 50;
     Eigen::Vector2d v = p + dir;
     cout << s.at(t, 1) << endl;
-    cv::arrowedLine(img, {int(p.x()), int(p.y())}, {int(v.x()), int(v.y())},
-                    {255, 255, 255});
+    cv::arrowedLine(img, {int(p.x()), int(p.y())}, {int(v.x()), int(v.y())}, {255, 255, 255});
     t += step;
   }
 

@@ -1,12 +1,12 @@
 #include "cubic_spline.hpp"
 
-auto CubicInterpolation::at(
-    const double& t, const int& derivative_order ) const -> CubicInterpolation::PointType   {
+auto CubicInterpolation::at(const double& t, const int& derivative_order) const
+    -> CubicInterpolation::PointType {
   switch (derivative_order) {
     case 0: {
       PointType point(0.0, 0.0);
       double tpow = 1.0;
-      for (const auto & coeff : coeffs_) {
+      for (const auto& coeff : coeffs_) {
         point += coeff * tpow;
         tpow *= t;
       }
@@ -45,7 +45,7 @@ void CubicInterpolation::interpolation(const PointType& p1,
   computeLength();
 }
 
-void CubicInterpolation::print(std::ostream& out, const std::string& s ) const   {
+void CubicInterpolation::print(std::ostream& out, const std::string& s) const {
   out << s;
   for (const auto& c : coeffs_) {
     out << c;

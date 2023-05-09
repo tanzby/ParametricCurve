@@ -9,23 +9,23 @@
  * @brief 一个简单的三次样条，只有两个数据点
  */
 class CubicInterpolation : public Curve<3, 2> {
-
-public:
+ public:
   using PointType = typename Curve<3, 2>::PointType;
 
-private:
+ private:
   PointType coeffs_[4];
 
-public:
+ public:
   CubicInterpolation() {
-    for (auto & coeff : coeffs_) { {
-      coeff.setZero();
-}
-}
+    for (auto& coeff : coeffs_) {
+      {
+        coeff.setZero();
+      }
+    }
   }
 
-  [[nodiscard]] auto at(const double &t,
-               const int &derivative_order = 0) const -> PointType override;
+  [[nodiscard]] auto at(const double& t, const int& derivative_order = 0) const
+      -> PointType override;
 
   /**
    * @brief 使用两个点，及起点与终点的方向，进行三次样条插值
@@ -34,10 +34,9 @@ public:
    * @param p2 终点坐标
    * @param theta2 终点方向，值域为 $[0, 2 \pi]$
    */
-  void interpolation(const PointType &p1, double theta1, const PointType &p2,
-                     double theta2);
+  void interpolation(const PointType& p1, double theta1, const PointType& p2, double theta2);
 
-  void print(std::ostream &out, const std::string &s ) const override;
+  void print(std::ostream& out, const std::string& s) const override;
 };
 
 /**
@@ -45,12 +44,12 @@ public:
  */
 template <int PointDim = 2>
 class PieceWiseCubicSpline : public Curve<3, PointDim> {
-public:
+ public:
   using PointType = typename Curve<3, PointDim>::PointType;
 
   enum BoundaryCondition { FirstDeriv = 0, SecondDeriv };
 
-protected:
+ protected:
   vector<double> t_;
 
   BoundaryCondition left_condition_, right_condition_;
@@ -58,15 +57,14 @@ protected:
   bool force_linear_extrapolation_;
 
   struct _Spline {
-    mutable const vector<double> *t_ptr{};
+    mutable const vector<double>* t_ptr{};
     Eigen::VectorXd y;
     Eigen::VectorXd a, b, c;
     double b0{}, c0{};
 
-    _Spline()= default;;
+    _Spline() = default;
 
-    void interp(PieceWiseCubicSpline<> &host, const vector<double> &t,
-                const Eigen::VectorXd &y) {
+    void interp(PieceWiseCubicSpline<>& host, const vector<double>& t, const Eigen::VectorXd& y) {
       assert(t.size() == y.size());
       const int N = y.size();
       this->t_ptr = &t;
@@ -79,8 +77,7 @@ protected:
 
       // build h
       for (int i = 1; i < N - 1; ++i) {
-        d[i] = (y[i + 1] - y[i]) / (t[i + 1] - t[i]) -
-               (y[i] - y[i - 1]) / (t[i] - t[i - 1]);
+        d[i] = (y[i + 1] - y[i]) / (t[i + 1] - t[i]) - (y[i] - y[i - 1]) / (t[i] - t[i - 1]);
         triplets.emplace_back(i, i - 1, (t[i] - t[i - 1]) / 3.0);
         triplets.emplace_back(i, i, 2 * (t[i + 1] - t[i - 1]) / 3.0);
         triplets.emplace_back(i, i + 1, (t[i + 1] - t[i]) / 3.0);
@@ -117,8 +114,7 @@ protected:
         triplets.emplace_back(N - 1, N - 1, 2.0 * (t[N - 1] - t[N - 2]));
         triplets.emplace_back(N - 1, N - 2, 1.0 * (t[N - 1] - t[N - 2]));
 
-        d[N - 1] = 3.0 * (host.right_cond_value_ -
-                          (y[N - 1] - y[N - 2]) / (t[N - 1] - t[N - 2]));
+        d[N - 1] = 3.0 * (host.right_cond_value_ - (y[N - 1] - y[N - 2]) / (t[N - 1] - t[N - 2]));
       } else {
         assert(false);
       }
@@ -148,17 +144,16 @@ protected:
       double h = t[N - 1] - t[N - 2];
       // b[N-1] is determined by the boundary condition
       a[N - 1] = 0.0;
-      c[N - 1] = 3.0 * a[N - 2] * h * h + 2.0 * b[N - 2] * h +
-                 c[N - 2]; // = f'_{n-2}(x_{n-1})
-      if (host.force_linear_extrapolation_) { {
-        b[N - 1] = 0.0;
-}
-}
+      c[N - 1] = 3.0 * a[N - 2] * h * h + 2.0 * b[N - 2] * h + c[N - 2];  // = f'_{n-2}(x_{n-1})
+      if (host.force_linear_extrapolation_) {
+        {
+          b[N - 1] = 0.0;
+        }
+      }
     }
 
-    auto at(const int &idx, const double &t,
-              const int derivative_order = 0) const -> double {
-      const vector<double> &t_ = *t_ptr;
+    auto at(const int& idx, const double& t, const int derivative_order = 0) const -> double {
+      const vector<double>& t_ = *t_ptr;
       size_t n = t_.size();
 
       double h = t - t_[idx];
@@ -167,53 +162,53 @@ protected:
       if (t < t_[0]) {
         // extrapolation to the left
         switch (derivative_order) {
-        case 0:
-          interpol = (b0 * h + c0) * h + y[0];
-          break;
-        case 1:
-          interpol = 2.0 * b0 * h + c0;
-          break;
-        case 2:
-          interpol = 2.0 * b0 * h;
-          break;
-        default:
-          interpol = 0.0;
-          break;
+          case 0:
+            interpol = (b0 * h + c0) * h + y[0];
+            break;
+          case 1:
+            interpol = 2.0 * b0 * h + c0;
+            break;
+          case 2:
+            interpol = 2.0 * b0 * h;
+            break;
+          default:
+            interpol = 0.0;
+            break;
         }
       } else if (t > t_[n - 1]) {
         // extrapolation to the right
         switch (derivative_order) {
-        case 0:
-          interpol = (b[n - 1] * h + c[n - 1]) * h + y[n - 1];
-          break;
-        case 1:
-          interpol = 2.0 * b[n - 1] * h + c[n - 1];
-          break;
-        case 2:
-          interpol = 2.0 * b[n - 1];
-          break;
-        default:
-          interpol = 0.0;
-          break;
+          case 0:
+            interpol = (b[n - 1] * h + c[n - 1]) * h + y[n - 1];
+            break;
+          case 1:
+            interpol = 2.0 * b[n - 1] * h + c[n - 1];
+            break;
+          case 2:
+            interpol = 2.0 * b[n - 1];
+            break;
+          default:
+            interpol = 0.0;
+            break;
         }
       } else {
         // interpolation
         switch (derivative_order) {
-        case 0:
-          interpol = ((a[idx] * h + b[idx]) * h + c[idx]) * h + y[idx];
-          break;
-        case 1:
-          interpol = (3.0 * a[idx] * h + 2.0 * b[idx]) * h + c[idx];
-          break;
-        case 2:
-          interpol = 6.0 * a[idx] * h + 2.0 * b[idx];
-          break;
-        case 3:
-          interpol = 6.0 * a[idx];
-          break;
-        default:
-          interpol = 0.0;
-          break;
+          case 0:
+            interpol = ((a[idx] * h + b[idx]) * h + c[idx]) * h + y[idx];
+            break;
+          case 1:
+            interpol = (3.0 * a[idx] * h + 2.0 * b[idx]) * h + c[idx];
+            break;
+          case 2:
+            interpol = 6.0 * a[idx] * h + 2.0 * b[idx];
+            break;
+          case 3:
+            interpol = 6.0 * a[idx];
+            break;
+          default:
+            interpol = 0.0;
+            break;
         }
       }
       return interpol;
@@ -223,9 +218,8 @@ protected:
   _Spline spline_objects_[PointDim];
 
   void computeLength() override {
-
     int idx = 0;
-    const auto df = [&](const double &t) -> double {
+    const auto df = [&](const double& t) -> double {
       double acc = 0;
       for (int d = 0; d < PointDim; ++d) {
         const double temp = spline_objects_[d].at(idx, t, 1);
@@ -235,8 +229,7 @@ protected:
     };
 
     for (idx = 0; idx < t_.size() - 1; ++idx) {
-      this->length_ +=
-          NumericalQuadrature::adaptive_simpson_3_8(df, t_[idx], t_[idx + 1]);
+      this->length_ += NumericalQuadrature::adaptive_simpson_3_8(df, t_[idx], t_[idx + 1]);
     }
     //        auto df = [&](const double& t) -> double
     //        {
@@ -246,17 +239,19 @@ protected:
     //        t_.front(), t_.back());
   }
 
-public:
+ public:
   PieceWiseCubicSpline() {
     left_cond_value_ = right_cond_value_ = 0;
     left_condition_ = right_condition_ = SecondDeriv;
     force_linear_extrapolation_ = false;
   }
 
-  void setBoundary(BoundaryCondition left, double left_value,
-                   BoundaryCondition right, double right_value,
+  void setBoundary(BoundaryCondition left,
+                   double left_value,
+                   BoundaryCondition right,
+                   double right_value,
                    bool force_linear_extrapolation) {
-    assert(t_.size() == 0); // set_points() must not have happened yet
+    assert(t_.size() == 0);  // set_points() must not have happened yet
     left_condition_ = left;
     right_condition_ = right;
     left_cond_value_ = left_value;
@@ -264,7 +259,7 @@ public:
     force_linear_extrapolation_ = force_linear_extrapolation;
   }
 
-  void interpolation(const vector<double> &t, const vector<PointType> &points) {
+  void interpolation(const vector<double>& t, const vector<PointType>& points) {
     assert(points.size() > 2);
 
     const unsigned N = points.size();
@@ -291,10 +286,9 @@ public:
    * @param derivative_order 给定的阶次
    * @return 返回三次样条插值点，类型为PieceWiseCubicSpline::PointType
    */
-  auto at(const double &t,
-               const int &derivative_order = 0) const -> PointType override {
-    auto begin = t_.data();
-    auto it = std::lower_bound(begin, begin + t_.size(), t);
+  auto at(const double& t, const int& derivative_order = 0) const -> PointType override {
+    const auto* begin = t_.data();
+    const auto* it = std::lower_bound(begin, begin + t_.size(), t);
     int idx = std::max(int(it - begin) - 1, 0);
 
     PointType ret{};
@@ -305,7 +299,7 @@ public:
     return ret;
   }
 
-  void print(std::ostream &out, const std::string &s = "") const override {
+  void print(std::ostream& out, const std::string& s = "") const override {
     /*
     out << s;
     out << "t:\n";
